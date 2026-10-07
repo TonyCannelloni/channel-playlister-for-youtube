@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Channel playlist</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;800;900&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#d9dcd6;--panel:#eceeea;--ink:#15171a;--mute:#6b7069;--line:#c2c6bf;--acc:#2b3fe0;--accInk:#fff}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 "Instrument Sans",system-ui,sans-serif}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+header{display:flex;gap:16px;align-items:center;padding:16px 24px;border-bottom:1px solid var(--line)}
+h1{font:900 22px/1 Archivo,sans-serif;margin:0;letter-spacing:-.02em;white-space:nowrap}
+#loadForm{display:flex;gap:8px;flex:1;max-width:760px}
+input[type=text],input[type=number],input[type=date],input[type=password],select{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:8px 10px;width:100%}
+.btn{background:var(--ink);color:#fff;border:0;border-radius:6px;padding:8px 14px;font-weight:600;white-space:nowrap}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--ink)}
+.btn.sm{padding:5px 10px;font-size:13px}
+#status{padding:8px 24px;color:var(--mute);min-height:34px}
+#status.err{color:#b3261e;font-weight:600}
+.layout{display:grid;grid-template-columns:320px 1fr;gap:24px;padding:0 24px 32px;align-items:start}
+aside{background:var(--panel);border-radius:10px;padding:16px;display:grid;gap:14px;position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto}
+label.f{display:grid;gap:5px;font-weight:600}
+label.f small{font-weight:400;color:var(--mute)}
+.row{display:flex;gap:8px;align-items:center}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:transparent;border-radius:99px;padding:3px 10px;font-size:13px}
+.chip.on{background:var(--acc);border-color:var(--acc);color:var(--accInk)}
+.chip i{font-style:normal;opacity:.6;margin-left:4px}
+#playerWrap{position:relative;aspect-ratio:16/9;background:#000;border-radius:10px;overflow:hidden}
+#playerWrap iframe{width:100%;height:100%;border:0}
+#perr{position:absolute;inset:0;display:none;place-items:center;text-align:center;padding:24px;color:#fff;background:#15171aee}
+#now{font:800 20px/1.2 Archivo,sans-serif;margin:14px 0 4px;letter-spacing:-.01em}
+#nowMeta{color:var(--mute);margin-bottom:10px}
+.bar{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;margin-bottom:18px}
+.bar label{display:flex;gap:6px;align-items:center}
+.qhead{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;border-top:1px solid var(--ink);padding-top:10px;margin-bottom:6px}
+#count{font-weight:600}
+ol{list-style:none;margin:0;padding:0}
+.it{display:grid;grid-template-columns:120px 1fr;gap:12px;width:100%;text-align:left;background:transparent;border:0;border-bottom:1px solid var(--line);padding:8px;border-radius:6px}
+.it:hover{background:var(--panel)}
+.it.on{background:var(--acc);color:var(--accInk)}
+.it.on .m{color:#ffffffcc}
+.it img{width:120px;aspect-ratio:16/9;object-fit:cover;border-radius:4px;background:#bbb}
+.it b{font-weight:600;display:block;margin-bottom:2px}
+.m{color:var(--mute);font-size:13px}
+li{position:relative}.it{padding-right:96px}
+.act{position:absolute;right:8px;top:8px;display:flex;gap:4px}
+.act button{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:2px 7px;font-size:13px}
+.it.heard:not(.on) img{opacity:.45}.it.heard:not(.on) b{color:var(--mute)}
+dialog{border:0;border-radius:12px;padding:22px;max-width:460px;background:var(--panel);color:var(--ink)}
+dialog::backdrop{background:#15171a99}
+dialog p{margin:0 0 12px}
+@media(max-width:860px){.layout{grid-template-columns:1fr}aside{position:static;max-height:none}header{flex-wrap:wrap}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Channel playlist</h1>
+  <form id="loadForm">
+    <input type="text" id="channelInput" placeholder="Channels: URLs, @handles, IDs or video links, separated by commas" aria-label="Channel">
+    <label class="row" style="white-space:nowrap"><input type="checkbox" id="fresh"> Refresh</label><button class="btn" type="submit">Build playlist</button>
+  </form>
+  <button class="btn ghost sm" id="keyBtn" type="button">API key</button>
+</header>
+<div id="status">Paste a channel to start.</div>
+
+<div class="layout">
+  <aside>
+    <label class="f">Search
+      <input type="text" id="q" placeholder="house deep -live">
+      <small>Words match title, tags and description. Start a word with - to exclude it.</small>
+    </label>
+    <label class="f">Sort by
+      <div class="row">
+        <select id="sort">
+          <option value="new">Newest first</option>
+          <option value="old">Oldest first</option>
+          <option value="views">Most viewed</option>
+          <option value="viewsAsc">Least viewed</option>
+          <option value="likes">Most liked</option>
+          <option value="long">Longest</option>
+          <option value="short">Shortest</option>
+          <option value="title">Title A to Z</option>
+          <option value="rnd">Random</option>
+        </select>
+        <button class="btn ghost sm" id="reroll" type="button" title="New random order">Reshuffle</button>
+      </div>
+    </label>
+    <div class="f">Length
+      <div class="chips" id="durChips">
+        <button class="chip on" type="button" data-min="" data-max="">Any</button>
+        <button class="chip" type="button" data-min="" data-max="4">Under 4 min</button>
+        <button class="chip" type="button" data-min="4" data-max="12">4 to 12 min</button>
+        <button class="chip" type="button" data-min="12" data-max="">12+ min</button>
+        <button class="chip" type="button" data-min="30" data-max="">30+ min (sets)</button>
+      </div>
+      <div class="row"><input type="number" id="minDur" min="0" placeholder="Min (min)"><input type="number" id="maxDur" min="0" placeholder="Max (min)"></div>
+    </div>
+    <div class="f">Uploaded between
+      <div class="row"><input type="date" id="from"><input type="date" id="to"></div>
+    </div>
+    <label class="f">Minimum views <input type="number" id="minViews" min="0" placeholder="0"></label>
+    <div class="f">Genre and topics
+      <small>Built from the channel's own tags and hashtags. Pick several to match any of them.</small>
+      <label class="row"><input type="checkbox" id="all"> Match all selected</label>
+      <div class="chips" id="tagChips"></div>
+      <button class="btn ghost sm" id="enrich" type="button">Add genre data (Discogs)</button>
+      <small>Looks up the videos in the current list. Narrow the list first to save time.</small>
+    </div>
+    <div class="f" id="chanBox" hidden>Channels <div class="chips" id="chanChips"></div></div>
+    <div class="f">My list
+      <label class="row"><input type="checkbox" id="favOnly"> Favorites only</label>
+      <label class="row"><input type="checkbox" id="hideSeen"> Hide videos I already played</label>
+      <div class="row"><button class="btn ghost sm" id="unhide" type="button">Unhide all (0)</button><button class="btn ghost sm" id="forget" type="button">Forget played</button></div>
+    </div>
+    <label class="f">Limit to <input type="number" id="limit" min="0" placeholder="All videos"></label>
+    <button class="btn ghost" id="reset" type="button">Reset filters</button>
+  </aside>
+
+  <main>
+    <div id="playerWrap"><div id="player"></div>
+      <div id="perr"><div><p><b>YouTube blocked the embedded player (error 153).</b></p><p>This happens when the file is opened straight from disk. Host the file (see the notes), or use "Open in YouTube queue" below.</p></div></div>
+    </div>
+    <div id="now">Nothing playing</div>
+    <div id="nowMeta">Pick a video from the list.</div>
+    <div class="bar">
+      <button class="btn sm" id="prev" type="button">Previous</button>
+      <button class="btn sm" id="next" type="button">Next</button>
+      <button class="btn sm ghost" id="playRand" type="button">Play a random one</button>
+      <label><input type="checkbox" id="auto" checked> Autoplay next</label>
+      <label title="Jump to a random point in each video, like digging for samples"><input type="checkbox" id="dig"> Dig mode (random start point)</label>
+    </div>
+    <div class="qhead">
+      <span id="count"></span>
+      <span class="row">
+        <button class="btn sm ghost" id="openYT" type="button">Open in YouTube queue</button>
+        <button class="btn sm ghost" id="saveYT" type="button">Save to YouTube</button>
+        <button class="btn sm ghost" id="copy" type="button">Copy links</button>
+        <button class="btn sm ghost" id="csv" type="button">Export CSV</button>
+      </span>
+    </div>
+    <ol id="list"></ol>
+    <div style="padding:14px 0"><button class="btn ghost" id="more" type="button" hidden>Show more</button></div>
+  </main>
+</div>
+
+<dialog id="keyDialog">
+  <p><b>YouTube Data API key</b></p>
+  <p class="m">Needed once. Create a free key in Google Cloud Console (enable "YouTube Data API v3", then Credentials, Create API key). It is stored only in this browser.</p>
+  <input type="password" id="keyInput" placeholder="YouTube API key (AIza...)">
+  <p class="m" style="margin-top:12px">Optional, to save playlists to your YouTube account: a Google OAuth client ID (type Web application, with your site address as an authorized JavaScript origin).</p>
+  <input type="text" id="gidInput" placeholder="OAuth client ID (...apps.googleusercontent.com)">
+  <p class="m" style="margin-top:12px">Optional, for genre data: a Discogs personal token (discogs.com, Settings, Developers).</p>
+  <input type="password" id="discInput" placeholder="Discogs token">
+  <div class="row" style="margin-top:14px;justify-content:flex-end">
+    <button class="btn ghost sm" id="keyCancel" type="button">Cancel</button>
+    <button class="btn sm" id="keySave" type="button">Save key</button>
+  </div>
+</dialog>
+
+<script>
+const $ = s => document.querySelector(s);
+const store = {
+  get: k => { try { return localStorage.getItem(k) || '' } catch (e) { return '' } },
+  set: (k, v) => { try { localStorage.setItem(k, v) } catch (e) {} }
+};
+let key = store.get('ycp_key');
+let videos = [], queue = [], idx = -1, curId = null, shown = 200, channelName = '';
+const getSet = k => { try { return new Set(JSON.parse(store.get(k) || '[]')) } catch (e) { return new Set() } };
+const saveSet = (k, x) => store.set(k, JSON.stringify([...x]));
+const fav = getSet('ycp_fav'), seen = getSet('ycp_seen'), hid = getSet('ycp_hide'), actChans = new Set();
+let gid = store.get('ycp_gid'), dTok = store.get('ycp_disc'), enriching = false, disc = {}, gTok = null;
+const db = (() => {
+  const open = () => new Promise((res, rej) => { const r = indexedDB.open('ycp', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => res(r.result); r.onerror = rej });
+  const tx = async (m, f) => { const d = await open(); return new Promise((res, rej) => { const r = f(d.transaction('kv', m).objectStore('kv')); r.onsuccess = () => res(r.result); r.onerror = rej }) };
+  return { get: k => tx('readonly', x => x.get(k)).catch(() => null), set: (k, v) => tx('readwrite', x => x.put(v, k)).catch(() => null) };
+})();
+const activeTags = new Set();
+let digPending = false, errStreak = 0, player = null, playerReady = false, pending = null;
+
+/* ---------- helpers ---------- */
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmtDur = s => { const h = Math.floor(s/3600), m = Math.floor(s%3600/60), x = s%60; return (h ? h + ':' + String(m).padStart(2,'0') : m) + ':' + String(x).padStart(2,'0') };
+const fmtTotal = s => { const h = Math.floor(s/3600), m = Math.round(s%3600/60); return h ? h + 'h ' + m + 'm' : m + 'm' };
+const compact = new Intl.NumberFormat('en', { notation: 'compact' });
+const parseDur = iso => { const m = /P(?:(\d+)D)?T?(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/.exec(iso || ''); return m ? (+m[1]||0)*86400 + (+m[2]||0)*3600 + (+m[3]||0)*60 + (+m[4]||0) : 0 };
+const setStatus = (t, err) => { const s = $('#status'); s.textContent = t; s.className = err ? 'err' : '' };
+
+async function api(path, params) {
+  const u = new URL('https://www.googleapis.com/youtube/v3/' + path);
+  Object.entries({ ...params, key }).forEach(([k, v]) => u.searchParams.set(k, v));
+  const r = await fetch(u), j = await r.json();
+  if (!r.ok) throw new Error(j.error && j.error.message ? j.error.message : r.statusText);
+  return j;
+}
+
+/* ---------- channel lookup ---------- */
+async function resolveChannel(input) {
+  let by = null;
+  const t = input.trim();
+  if (/^UC[\w-]{22}$/.test(t)) by = { id: t };
+  else if (t.startsWith('@')) by = { forHandle: t };
+  else {
+    let u = null;
+    try { u = new URL(/^https?:/.test(t) ? t : 'https://' + t) } catch (e) {}
+    if (u && /youtu/.test(u.hostname)) {
+      const p = u.pathname.split('/').filter(Boolean);
+      const vid = u.hostname === 'youtu.be' ? p[0] : (p[0] === 'watch' ? u.searchParams.get('v') : null);
+      if (vid) {
+        const v = await api('videos', { part: 'snippet', id: vid });
+        if (!v.items.length) throw new Error('Video not found.');
+        by = { id: v.items[0].snippet.channelId };
+      } else if (p[0] && p[0][0] === '@') by = { forHandle: p[0] };
+      else if (p[0] === 'channel') by = { id: p[1] };
+      else if (p[0] === 'user') by = { forUsername: p[1] };
+      else by = { search: p[p.length - 1] };
+    } else by = { search: t };
+  }
+  if (by.search) {
+    const s = await api('search', { part: 'snippet', type: 'channel', q: by.search, maxResults: 1 });
+    if (!s.items.length) throw new Error('No channel found for that input.');
+    by = { id: s.items[0].snippet.channelId };
+  }
+  const c = await api('channels', { part: 'snippet,contentDetails', ...by });
+  if (!c.items || !c.items.length) throw new Error('Channel not found.');
+  return c.items[0];
+}
+
+function mapVideo(it, ch) {
+  const s = it.snippet, st = it.statistics || {};
+  const tags = new Set((s.tags || []).map(x => x.toLowerCase().trim()));
+  ((s.title + ' ' + (s.description || '')).match(/#[\p{L}\d_]{2,}/gu) || []).forEach(h => tags.add(h.slice(1).toLowerCase()));
+  const th = s.thumbnails || {};
+  return { id: it.id, title: s.title, published: Date.parse(s.publishedAt), dur: parseDur(it.contentDetails.duration),
+    views: +st.viewCount || 0, likes: +st.likeCount || 0, thumb: (th.medium || th.default || {}).url || '', live: s.liveBroadcastContent,
+    tags, ch, dtxt: (s.description || '').slice(0, 500), rnd: Math.random() };
+}
+const hayOf = v => (v.title + ' ' + v.ch + ' ' + [...v.tags].join(' ') + ' ' + v.dtxt).toLowerCase();
+function applyDisc(v) { const d = disc[v.id]; if (d) { d.forEach(t => v.tags.add(t)); v.dg = d.join(', ') } v.hay = hayOf(v) }
+
+async function fetchChannel(input, force) {
+  const ch = await resolveChannel(input), name = ch.snippet.title;
+  const cached = force ? null : await db.get('ch:' + ch.id);
+  if (cached && Date.now() - cached.t < 6048e5) return cached.v.map(v => ({ ...v, tags: new Set(v.tags) }));
+  const uploads = ch.contentDetails.relatedPlaylists.uploads, ids = []; let token = '';
+  do {
+    const j = await api('playlistItems', { part: 'contentDetails', playlistId: uploads, maxResults: 50, pageToken: token });
+    j.items.forEach(i => ids.push(i.contentDetails.videoId)); token = j.nextPageToken || '';
+    setStatus('Reading ' + name + ': ' + ids.length + ' videos found...');
+  } while (token);
+  const out = [];
+  for (let i = 0; i < ids.length; i += 200) {
+    const jobs = [];
+    for (let k = i; k < Math.min(i + 200, ids.length); k += 50)
+      jobs.push(api('videos', { part: 'snippet,contentDetails,statistics', id: ids.slice(k, k + 50).join(','), maxResults: 50 }));
+    (await Promise.all(jobs)).forEach(r => r.items.forEach(it => out.push(mapVideo(it, name))));
+    setStatus('Loading details for ' + name + ': ' + out.length + ' of ' + ids.length + '...');
+  }
+  const vids = out.filter(v => v.live !== 'upcoming');
+  db.set('ch:' + ch.id, { t: Date.now(), v: vids.map(v => ({ ...v, tags: [...v.tags] })) });
+  return vids;
+}
+
+async function load() {
+  const inputs = $('#channelInput').value.split(/[,\n]+/).map(x => x.trim()).filter(Boolean);
+  if (!inputs.length) return;
+  if (!key) { $('#keyDialog').showModal(); return }
+  store.set('ycp_last', $('#channelInput').value);
+  try {
+    const all = [];
+    for (const inp of inputs) all.push(...await fetchChannel(inp, $('#fresh').checked));
+    const ids = new Set();
+    videos = all.filter(v => !ids.has(v.id) && ids.add(v.id));
+    disc = (await db.get('discogs')) || {};
+    videos.forEach(applyDisc);
+    const names = [...new Set(videos.map(v => v.ch))];
+    channelName = names.join(', ');
+    buildChips(names); resetFilters(true);
+    setStatus(channelName + ': ' + videos.length + ' videos in the pool.');
+    apply();
+  } catch (e) { setStatus(e.message, true) }
+}
+function buildChips(names) {
+  buildTagChips();
+  $('#chanBox').hidden = names.length < 2;
+  $('#chanChips').innerHTML = names.map(n => '<button class="chip" type="button" data-c="' + esc(n) + '">' + esc(n) + '</button>').join('');
+}
+
+/* ---------- filters ---------- */
+function buildTagChips() {
+  const c = new Map();
+  videos.forEach(v => v.tags.forEach(t => c.set(t, (c.get(t) || 0) + 1)));
+  const top = [...c].filter(x => x[1] >= 2).sort((a, b) => b[1] - a[1]).slice(0, 40);
+  $('#tagChips').innerHTML = top.length
+    ? top.map(([t, n]) => '<button class="chip' + (activeTags.has(t) ? ' on' : '') + '" type="button" data-t="' + esc(t) + '">' + esc(t) + '<i>' + n + '</i></button>').join('')
+    : '<small>This channel has no repeated tags. Use the search box instead.</small>';
+}
+
+function apply() {
+  const terms = $('#q').value.toLowerCase().split(/\s+/).filter(Boolean);
+  const inc = terms.filter(t => t[0] !== '-'), exc = terms.filter(t => t[0] === '-' && t.length > 1).map(t => t.slice(1));
+  const min = (parseFloat($('#minDur').value) || 0) * 60, max = (parseFloat($('#maxDur').value) || Infinity) * 60;
+  const from = $('#from').value ? Date.parse($('#from').value) : -Infinity;
+  const to = $('#to').value ? Date.parse($('#to').value) + 864e5 : Infinity;
+  const mv = parseInt($('#minViews').value) || 0;
+  let list = videos.filter(v =>
+    v.dur >= min && v.dur <= max && v.published >= from && v.published < to && v.views >= mv &&
+    inc.every(t => v.hay.includes(t)) && !exc.some(t => v.hay.includes(t)) &&
+    (!activeTags.size || ($('#all').checked ? [...activeTags].every(t => v.tags.has(t)) : [...activeTags].some(t => v.tags.has(t)))) &&
+    (!actChans.size || actChans.has(v.ch)) && !hid.has(v.id) && (!$('#favOnly').checked || fav.has(v.id)) && (!$('#hideSeen').checked || !seen.has(v.id)));
+  const sorts = {
+    new: (a, b) => b.published - a.published, old: (a, b) => a.published - b.published,
+    views: (a, b) => b.views - a.views, viewsAsc: (a, b) => a.views - b.views, likes: (a, b) => b.likes - a.likes,
+    long: (a, b) => b.dur - a.dur, short: (a, b) => a.dur - b.dur,
+    title: (a, b) => a.title.localeCompare(b.title), rnd: (a, b) => a.rnd - b.rnd
+  };
+  list.sort(sorts[$('#sort').value]);
+  const lim = parseInt($('#limit').value) || 0;
+  if (lim) list = list.slice(0, lim);
+  queue = list; idx = queue.findIndex(v => v.id === curId);
+  shown = 200; render();
+}
+
+function resetFilters(silent) {
+  ['#q', '#minDur', '#maxDur', '#from', '#to', '#minViews', '#limit'].forEach(s => $(s).value = '');
+  $('#sort').value = 'new'; activeTags.clear(); actChans.clear(); ['#all', '#favOnly', '#hideSeen'].forEach(x => $(x).checked = false); document.querySelectorAll('#chanChips .chip').forEach(c => c.classList.remove('on'));
+  document.querySelectorAll('#tagChips .chip').forEach(c => c.classList.remove('on'));
+  setDurChip($('#durChips .chip'));
+  if (!silent) apply();
+}
+function setDurChip(btn) {
+  document.querySelectorAll('#durChips .chip').forEach(c => c.classList.toggle('on', c === btn));
+  $('#minDur').value = btn.dataset.min; $('#maxDur').value = btn.dataset.max;
+}
+
+/* ---------- list ---------- */
+function render() {
+  const total = queue.reduce((s, v) => s + v.dur, 0);
+  $('#count').textContent = queue.length ? queue.length + ' of ' + videos.length + ' videos, ' + fmtTotal(total) + ' of listening' : (videos.length ? 'No videos match these filters.' : 'No playlist yet.');
+  const multi = new Set(videos.map(v => v.ch)).size > 1;
+  $('#unhide').textContent = 'Unhide all (' + hid.size + ')';
+  $('#list').innerHTML = queue.slice(0, shown).map((v, i) =>
+    '<li><button class="it' + (v.id === curId ? ' on' : '') + (seen.has(v.id) ? ' heard' : '') + '" data-i="' + i + '"><img loading="lazy" src="' + esc(v.thumb) + '" alt="">' +
+    '<span><b>' + esc(v.title) + '</b><span class="m">' + (multi ? esc(v.ch) + '  |  ' : '') + new Date(v.published).toLocaleDateString() + '  |  ' + fmtDur(v.dur) + '  |  ' + compact.format(v.views) + ' views' + (v.dg ? '  |  ' + esc(v.dg) : '') + '</span></span></button>' +
+    '<span class="act"><button data-fav="' + v.id + '" title="Favorite">' + (fav.has(v.id) ? '\u2605' : '\u2606') + '</button><button data-hide="' + v.id + '" title="Hide this video">Hide</button></span></li>').join('');
+  $('#more').hidden = queue.length <= shown;
+  $('#more').textContent = 'Show more (' + (queue.length - shown) + ' left)';
+}
+
+/* ---------- player ---------- */
+const tag = document.createElement('script'); tag.src = 'https://www.youtube.com/iframe_api'; document.head.appendChild(tag);
+const gs = document.createElement('script'); gs.src = 'https://accounts.google.com/gsi/client'; gs.async = true; document.head.appendChild(gs);
+window.onYouTubeIframeAPIReady = () => {
+  player = new YT.Player('player', {
+    width: '100%', height: '100%', playerVars: { playsinline: 1, rel: 0 },
+    events: { onReady: () => { playerReady = true; if (pending !== null) { play(pending); pending = null } }, onStateChange: onState, onError: onErr }
+  });
+};
+function onState(e) {
+  if (e.data === YT.PlayerState.PLAYING && digPending) {
+    digPending = false;
+    const d = player.getDuration();
+    if (d > 90) player.seekTo(d * (0.1 + Math.random() * 0.6), true);
+  }
+  if (e.data === YT.PlayerState.PLAYING) errStreak = 0;
+  if (e.data === YT.PlayerState.ENDED && $('#auto').checked) step(1);
+}
+function onErr(e) {
+  if (e.data === 153) { $('#perr').style.display = 'grid'; return }
+  if (++errStreak > 5) { setStatus('Several videos in a row could not be played. Stopping.', true); return }
+  setStatus('Skipped a video that cannot be embedded.'); setTimeout(() => step(1), 800);
+}
+function play(i) {
+  if (i < 0 || i >= queue.length) return;
+  if (!playerReady) { pending = i; return }
+  idx = i; const v = queue[i]; curId = v.id; digPending = $('#dig').checked; seen.add(v.id); saveSet('ycp_seen', seen);
+  $('#perr').style.display = 'none';
+  player.loadVideoById(v.id);
+  $('#now').textContent = v.title;
+  $('#nowMeta').textContent = v.ch + '  |  ' + new Date(v.published).toLocaleDateString() + '  |  ' + fmtDur(v.dur) + '  |  ' + compact.format(v.views) + ' views';
+  document.querySelectorAll('.it').forEach(b => b.classList.toggle('on', +b.dataset.i === i));
+  const el = document.querySelector('.it.on'); if (el) el.scrollIntoView({ block: 'nearest' });
+}
+const step = d => { if (!queue.length) return; if (idx < 0) return play(0); const n = idx + d; if (n >= 0 && n < queue.length) { if (n >= shown) { shown = n + 50; render() } play(n) } };
+
+/* ---------- export ---------- */
+function copyText(t) {
+  const done = () => setStatus('Copied to clipboard.');
+  if (navigator.clipboard) navigator.clipboard.writeText(t).then(done, fallback); else fallback();
+  function fallback() { const a = document.createElement('textarea'); a.value = t; document.body.appendChild(a); a.select(); document.execCommand('copy'); a.remove(); done() }
+}
+function csv() {
+  const q = s => '"' + String(s).replace(/"/g, '""') + '"';
+  const rows = [['title', 'url', 'published', 'duration_sec', 'views', 'likes'].join(',')]
+    .concat(queue.map(v => [q(v.title), 'https://www.youtube.com/watch?v=' + v.id, new Date(v.published).toISOString().slice(0, 10), v.dur, v.views, v.likes].join(',')));
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([rows.join('\n')], { type: 'text/csv' }));
+  a.download = (channelName || 'playlist').replace(/\W+/g, '-') + '.csv'; a.click();
+}
+
+/* ---------- genre data (Discogs) ---------- */
+const clean = x => x.replace(/[\(\[][^\)\]]*[\)\]]/g, ' ').replace(/\b(official|video|audio|lyrics?|hd|remaster(ed)?)\b/gi, ' ').replace(/\s+/g, ' ').trim();
+const norm = x => x.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
+const wait = ms => new Promise(z => setTimeout(z, ms));
+async function enrich() {
+  if (enriching) { enriching = false; return }
+  if (!dTok) { setStatus('Add your Discogs token under API key first.', true); return }
+  enriching = true; $('#enrich').textContent = 'Stop genre lookup';
+  const todo = queue.filter(v => !disc[v.id]); let n = 0;
+  for (const v of todo) {
+    if (!enriching) break;
+    const m = /^(.+?)\s+[-\u2013]\s+(.+)$/.exec(clean(v.title));
+    let res = [];
+    if (m) {
+      try {
+        const u = new URL('https://api.discogs.com/database/search');
+        Object.entries({ artist: m[1], track: m[2], type: 'release', per_page: 5, token: dTok }).forEach(([k, x]) => u.searchParams.set(k, x));
+        const r = await fetch(u);
+        if (r.status === 429) { setStatus('Discogs rate limit, waiting 30 seconds...'); await wait(30000); continue }
+        const j = await r.json(), a = norm(m[1]);
+        const hit = (j.results || []).find(x => norm(x.title || '').startsWith(a));
+        if (hit) res = [...(hit.genre || []), ...(hit.style || [])].map(x => x.toLowerCase());
+      } catch (e) { setStatus('Discogs request failed (' + e.message + '). Check the token, or the browser may be blocking the request.', true); break }
+    }
+    disc[v.id] = res; applyDisc(v); n++;
+    setStatus('Genre lookup: ' + n + ' of ' + todo.length + ' (about 1 per second, you can keep browsing)');
+    if (n % 10 === 0) { db.set('discogs', disc); buildTagChips() }
+    await wait(1100);
+  }
+  enriching = false; $('#enrich').textContent = 'Add genre data (Discogs)';
+  await db.set('discogs', disc); buildTagChips(); apply();
+}
+
+/* ---------- save to YouTube account ---------- */
+function gAuth() {
+  return new Promise((res, rej) => {
+    if (gTok) return res(gTok);
+    if (!gid) return rej(new Error('Add your Google OAuth client ID under API key first.'));
+    if (!window.google || !google.accounts) return rej(new Error('Google sign-in did not load. Reload the page and try again.'));
+    google.accounts.oauth2.initTokenClient({ client_id: gid, scope: 'https://www.googleapis.com/auth/youtube',
+      callback: r => r.access_token ? (gTok = r.access_token, res(gTok)) : rej(new Error(r.error || 'Sign-in failed')) }).requestAccessToken();
+  });
+}
+async function gPost(path, body) {
+  const r = await fetch('https://www.googleapis.com/youtube/v3/' + path, { method: 'POST', headers: { Authorization: 'Bearer ' + gTok, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  const j = await r.json(); if (!r.ok) throw new Error(j.error && j.error.message ? j.error.message : r.statusText); return j;
+}
+async function saveToYT() {
+  if (!queue.length) return;
+  const cap = 150, list = queue.slice(0, cap);
+  try {
+    if (!confirm('Create a private YouTube playlist with ' + list.length + ' videos' + (queue.length > cap ? ' (the first ' + cap + ' of ' + queue.length + ')' : '') + '? Each video costs 50 units of your daily API quota of 10,000.')) return;
+    await gAuth();
+    const title = prompt('Playlist name', channelName + ' (filtered)'); if (!title) return;
+    const pl = await gPost('playlists?part=snippet,status', { snippet: { title, description: 'Made with Channel playlist' }, status: { privacyStatus: 'private' } });
+    for (let i = 0; i < list.length; i++) {
+      await gPost('playlistItems?part=snippet', { snippet: { playlistId: pl.id, resourceId: { kind: 'youtube#video', videoId: list[i].id } } });
+      setStatus('Saving to YouTube: ' + (i + 1) + ' of ' + list.length + '...');
+    }
+    setStatus('Saved as a private playlist: https://www.youtube.com/playlist?list=' + pl.id);
+    window.open('https://www.youtube.com/playlist?list=' + pl.id, '_blank');
+  } catch (e) { setStatus(e.message, true) }
+}
+
+/* ---------- events ---------- */
+$('#loadForm').addEventListener('submit', e => { e.preventDefault(); load() });
+let t; $('#q').addEventListener('input', () => { clearTimeout(t); t = setTimeout(apply, 200) });
+['#sort', '#minDur', '#maxDur', '#from', '#to', '#minViews', '#limit'].forEach(s => $(s).addEventListener('input', () => {
+  if (s === '#minDur' || s === '#maxDur') document.querySelectorAll('#durChips .chip').forEach(c => c.classList.remove('on'));
+  apply();
+}));
+$('#durChips').addEventListener('click', e => { const b = e.target.closest('.chip'); if (b) { setDurChip(b); apply() } });
+$('#tagChips').addEventListener('click', e => {
+  const b = e.target.closest('.chip'); if (!b) return;
+  const k = b.dataset.t; activeTags.has(k) ? activeTags.delete(k) : activeTags.add(k);
+  b.classList.toggle('on', activeTags.has(k)); apply();
+});
+$('#list').addEventListener('click', e => {
+  const f = e.target.closest('[data-fav]'), h = e.target.closest('[data-hide]'), b = e.target.closest('.it');
+  if (f) { const id = f.dataset.fav; fav.has(id) ? fav.delete(id) : fav.add(id); saveSet('ycp_fav', fav); f.textContent = fav.has(id) ? '\u2605' : '\u2606'; if ($('#favOnly').checked) apply() }
+  else if (h) { hid.add(h.dataset.hide); saveSet('ycp_hide', hid); apply() }
+  else if (b) play(+b.dataset.i);
+});
+$('#chanChips').addEventListener('click', e => { const b = e.target.closest('.chip'); if (!b) return; const k = b.dataset.c; actChans.has(k) ? actChans.delete(k) : actChans.add(k); b.classList.toggle('on', actChans.has(k)); apply() });
+['#all', '#favOnly', '#hideSeen'].forEach(x => $(x).addEventListener('change', apply));
+$('#unhide').addEventListener('click', () => { hid.clear(); saveSet('ycp_hide', hid); apply() });
+$('#forget').addEventListener('click', () => { seen.clear(); saveSet('ycp_seen', seen); apply() });
+$('#enrich').addEventListener('click', enrich);
+$('#saveYT').addEventListener('click', saveToYT);
+$('#more').addEventListener('click', () => { shown += 200; render() });
+$('#reroll').addEventListener('click', () => { videos.forEach(v => v.rnd = Math.random()); $('#sort').value = 'rnd'; apply() });
+$('#reset').addEventListener('click', () => resetFilters());
+$('#prev').addEventListener('click', () => step(-1));
+$('#next').addEventListener('click', () => step(1));
+$('#playRand').addEventListener('click', () => { if (queue.length) play(Math.floor(Math.random() * queue.length)) });
+$('#openYT').addEventListener('click', () => {
+  if (!queue.length) return;
+  const from = Math.max(idx, 0);
+  window.open('https://www.youtube.com/watch_videos?video_ids=' + queue.slice(from, from + 50).map(v => v.id).join(','), '_blank');
+});
+$('#copy').addEventListener('click', () => copyText(queue.map(v => 'https://www.youtube.com/watch?v=' + v.id).join('\n')));
+$('#csv').addEventListener('click', csv);
+$('#keyBtn').addEventListener('click', () => { $('#keyInput').value = key; $('#gidInput').value = gid; $('#discInput').value = dTok; $('#keyDialog').showModal() });
+$('#keyCancel').addEventListener('click', () => $('#keyDialog').close());
+$('#keySave').addEventListener('click', () => { key = $('#keyInput').value.trim(); gid = $('#gidInput').value.trim(); dTok = $('#discInput').value.trim(); store.set('ycp_key', key); store.set('ycp_gid', gid); store.set('ycp_disc', dTok); $('#keyDialog').close() });
+$('#channelInput').value = store.get('ycp_last');
+if (!key) setStatus('Add your YouTube API key first (top right), then paste a channel.');
+render();
+</script>
+</body>
+</html>
