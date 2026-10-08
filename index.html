@@ -37,7 +37,8 @@ input[type=text],input[type=number],input[type=date],input[type=password],select
   transition:border-color .15s,box-shadow .15s}
 input:focus,select:focus{border-color:var(--acc);box-shadow:0 0 0 3px color-mix(in srgb,var(--acc) 25%,transparent)}
 .btn{background:var(--ink);color:#fff;border:0;border-radius:8px;padding:9px 14px;font-weight:600;white-space:nowrap;transition:transform .12s,opacity .12s}
-.btn:active{transform:scale(.98)}
+.btn:active:not(:disabled){transform:scale(.98)}
+.btn:disabled{opacity:.55;cursor:not-allowed}
 .btn.ghost{background:var(--panel2);color:var(--ink);border:1px solid color-mix(in srgb,var(--ink) 22%,var(--line))}
 .btn.ghost:hover{border-color:var(--acc);background:color-mix(in srgb,var(--acc) 10%,var(--panel2))}
 .btn.sm{padding:6px 10px;font-size:13px}
@@ -50,7 +51,7 @@ aside .btn.ghost{background:var(--panel);border-color:var(--line)}
   border:1px solid var(--line);display:grid;gap:8px;align-content:center;max-width:1600px;
 }
 #status.err{border-color:color-mix(in srgb,var(--err) 45%,var(--line));background:color-mix(in srgb,var(--err) 8%,var(--panel2))}
-#statusText{color:var(--mute);font-size:13px}
+#statusText{color:color-mix(in srgb,var(--ink) 70%,var(--mute));font-size:13px}
 #status.err #statusText{color:var(--err);font-weight:600}
 #status.ok #statusText{color:var(--ok);font-weight:600}
 #status.busy #statusText{color:var(--ink)}
@@ -84,7 +85,7 @@ body.layout-studio li{grid-template-columns:72px 1fr auto;gap:8px;padding:8px 4p
 body.layout-studio .thumb-wrap,body.layout-studio .it img{width:72px}
 body.layout-studio .it b{font-size:13px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 body.layout-studio .act{flex-direction:row}
-body.layout-studio .dg{-webkit-line-clamp:1;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
+body.layout-studio .disc-meta{font-size:10px;line-height:1.35}
 
 aside{
   background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:12px;
@@ -104,7 +105,14 @@ aside{
 .filter-body{padding:0 12px 12px;display:grid;gap:12px}
 .filter-sec--primary{border-color:color-mix(in srgb,var(--acc) 35%,var(--line));background:color-mix(in srgb,var(--acc) 6%,var(--panel))}
 label.f{display:grid;gap:6px;font-weight:600;font-size:13px}
-label.f small{font-weight:400;color:var(--mute);line-height:1.4}
+label.f small{font-weight:400;color:color-mix(in srgb,var(--ink) 55%,var(--mute));line-height:1.45}
+.discogs-box{
+  padding:12px;border:1px solid color-mix(in srgb,var(--acc) 35%,var(--line));border-radius:10px;
+  background:color-mix(in srgb,var(--acc) 7%,var(--bg));display:grid;gap:10px;
+}
+.discogs-box .box-title{margin:0;font-size:13px;font-weight:800;letter-spacing:.02em}
+.discogs-box .box-lead{margin:0;font-size:12px;line-height:1.45;color:color-mix(in srgb,var(--ink) 60%,var(--mute))}
+#discBatchNote{font-size:12px;font-weight:600;color:var(--ink)}
 .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
 .chip{
@@ -115,7 +123,7 @@ label.f small{font-weight:400;color:var(--mute);line-height:1.4}
 .chip.on{background:var(--acc);border-color:var(--acc);color:var(--accInk)}
 .chip i{font-style:normal;opacity:.65;margin-left:4px;font-size:11px}
 .tag-tools{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
-#tagCount{font-size:12px;color:var(--mute);font-weight:500}
+#tagCount{font-size:12px;color:color-mix(in srgb,var(--ink) 55%,var(--mute));font-weight:500}
 .tag-scroll{max-height:140px;overflow:auto;padding-right:4px;border:1px dashed var(--line);border-radius:8px;padding:8px}
 .tag-scroll.expanded{max-height:none}
 #tagExpand{font-size:12px;color:var(--acc);font-weight:600;padding:4px 0;text-decoration:underline;text-underline-offset:3px}
@@ -128,7 +136,7 @@ main{min-width:0}
 #playerWrap iframe{width:100%;height:100%;border:0}
 #perr{position:absolute;inset:0;display:none;place-items:center;text-align:center;padding:24px;color:#fff;background:#15171aee}
 #now{font:900 clamp(20px,3vw,28px)/1.15 Archivo,sans-serif;margin:16px 0 6px;letter-spacing:-.02em}
-#nowMeta{color:var(--mute);font-size:13px;margin-bottom:14px;line-height:1.4}
+#nowMeta{color:color-mix(in srgb,var(--ink) 55%,var(--mute));font-size:13px;margin-bottom:14px;line-height:1.4}
 .transport{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;padding-top:12px;border-top:1px solid var(--line)}
 .transport .transport-btns{display:flex;flex-wrap:wrap;gap:8px}
 .toggle{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:500;cursor:pointer;user-select:none}
@@ -182,6 +190,10 @@ li:last-child{border-bottom:0}
 .it b{font-weight:600;display:block;margin-bottom:4px;line-height:1.35}
 .m{color:var(--mute);font-size:12px;line-height:1.45}
 .dg{display:block;margin-top:4px;font-size:11px;color:color-mix(in srgb,var(--acc) 70%,var(--mute));line-height:1.35;font-weight:500}
+.disc-meta{display:block;margin-top:6px;font-size:11px;line-height:1.45;color:color-mix(in srgb,var(--ink) 50%,var(--mute))}
+.disc-row{display:block;margin-top:2px}
+.disc-k{font-weight:700;color:var(--ink);margin-right:4px}
+li.on-row .disc-meta,li.on-row .disc-k{color:#ffffffd9}
 .disc-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mute)}
 .act{display:flex;flex-direction:column;gap:6px;flex-shrink:0}
 .act button{
@@ -267,7 +279,7 @@ dialog::backdrop{background:#15171acc}
       <span>Filters</span>
       <button type="button" id="filterClose" aria-label="Close filters">×</button>
     </div>
-    <details class="filter-sec filter-sec--primary" open>
+    <details class="filter-sec" open>
       <summary>Find and sort</summary>
       <div class="filter-body">
         <label class="f">Search
@@ -300,18 +312,6 @@ dialog::backdrop{background:#15171acc}
           </div>
           <div class="row"><input type="number" id="minDur" min="0" placeholder="Min (min)"><input type="number" id="maxDur" min="0" placeholder="Max (min)"></div>
         </div>
-        <div class="f">Limit list size
-          <div class="chips" id="limitChips">
-            <button class="chip on" type="button" data-n="">All</button>
-            <button class="chip" type="button" data-n="50">50</button>
-            <button class="chip" type="button" data-n="100">100</button>
-            <button class="chip" type="button" data-n="150">150</button>
-            <button class="chip" type="button" data-n="200">200</button>
-            <button class="chip" type="button" data-n="250">250</button>
-          </div>
-          <input type="number" id="limit" min="0" placeholder="Custom number (0 or empty = all)">
-          <small>Use a limit before Discogs lookup. Saved genres stay when you raise the limit and run another batch.</small>
-        </div>
       </div>
     </details>
     <details class="filter-sec" open>
@@ -323,10 +323,28 @@ dialog::backdrop{background:#15171acc}
         <label class="f">Minimum views <input type="number" id="minViews" min="0" placeholder="0"></label>
       </div>
     </details>
-    <details class="filter-sec">
+    <details class="filter-sec filter-sec--primary" open>
       <summary>Genre and topics</summary>
       <div class="filter-body">
-        <small>YouTube tags (below) and Discogs genres (after lookup). Pick chips to filter the list.</small>
+        <div class="discogs-box" aria-labelledby="discogsBoxTitle">
+          <p class="box-title" id="discogsBoxTitle">Discogs lookup</p>
+          <p class="box-lead">Set how many videos stay in the playlist, then run lookup. Discogs reads year, genre, style, and release for each title that matches Artist - Track.</p>
+          <p id="discBatchNote">Current list: 0 videos</p>
+          <label class="f" for="limit">List size
+            <div class="chips" id="limitChips" role="group" aria-label="Preset list sizes">
+              <button class="chip on" type="button" data-n="" aria-pressed="true">All</button>
+              <button class="chip" type="button" data-n="50" aria-pressed="false">50</button>
+              <button class="chip" type="button" data-n="100" aria-pressed="false">100</button>
+              <button class="chip" type="button" data-n="150" aria-pressed="false">150</button>
+              <button class="chip" type="button" data-n="200" aria-pressed="false">200</button>
+              <button class="chip" type="button" data-n="250" aria-pressed="false">250</button>
+            </div>
+            <input type="number" id="limit" min="0" placeholder="Custom count (empty = all)" aria-describedby="discLimitHelp">
+            <small id="discLimitHelp">Tip: start with 50. Raise the limit and run again to fetch the next batch. Earlier matches stay saved in this browser.</small>
+          </label>
+          <button class="btn acc" id="enrich" type="button">Add genre data (Discogs)</button>
+        </div>
+        <small>Filter matched videos with chips below. YouTube tags come from the channel. Discogs tags appear after lookup.</small>
         <label class="toggle row"><input type="checkbox" id="all"><span class="toggle-ui" aria-hidden="true"></span> Match all selected</label>
         <div class="f" id="discTagBox" hidden>
           <span class="disc-label">Discogs genres</span>
@@ -335,8 +353,6 @@ dialog::backdrop{background:#15171acc}
         <span class="disc-label">Channel tags</span>
         <div class="tag-tools"><span id="tagCount"></span><button type="button" id="tagExpand" hidden>Show all tags</button></div>
         <div class="tag-scroll" id="tagScroll"><div class="chips" id="tagChips"></div></div>
-        <button class="btn acc sm" id="enrich" type="button">Add genre data (Discogs)</button>
-        <small>Parses titles as Artist - Track, then searches Discogs. Genres show under each video title and in Discogs chips above. Narrow the list first.</small>
       </div>
     </details>
     <div class="f" id="chanBox" hidden>Channels <div class="chips" id="chanChips"></div></div>
@@ -368,7 +384,7 @@ dialog::backdrop{background:#15171acc}
         <div id="nowMeta">Pick a video from the list.</div>
         <div class="transport">
           <div class="transport-btns">
-            <button class="btn sm" id="prev" type="button">Previous</button>
+            <button class="btn sm ghost" id="prev" type="button">Previous</button>
             <button class="btn sm acc" id="next" type="button">Next</button>
             <button class="btn sm ghost" id="playRand" type="button">Play a random one</button>
           </div>
@@ -526,12 +542,41 @@ function mapVideo(it, ch) {
     tags, ch, dtxt: (s.description || '').slice(0, 500), rnd: Math.random() };
 }
 const hayOf = v => (v.title + ' ' + v.ch + ' ' + [...v.tags].join(' ') + ' ' + v.dtxt).toLowerCase();
+function normDiscEntry(d) {
+  if (!d) return null;
+  if (Array.isArray(d)) return d.length ? { release: '', year: '', genres: d, styles: [], label: '', format: '' } : null;
+  if (d.miss) return null;
+  return d;
+}
+function discHasMatch(d) {
+  const m = normDiscEntry(d);
+  return !!(m && ((m.genres && m.genres.length) || (m.styles && m.styles.length)));
+}
+function discNeedsLookup(id) {
+  return !discHasMatch(disc[id]);
+}
+function formatDiscogsSummary(m) {
+  return [m.year, (m.genres || []).join(', '), (m.styles || []).join(', '), m.label].filter(Boolean).join(' · ');
+}
+function discogsRowHtml(m) {
+  if (!m || !discHasMatch(m)) return '';
+  const rows = [];
+  if (m.year) rows.push(['Year', m.year]);
+  if (m.genres && m.genres.length) rows.push(['Genre', m.genres.join(', ')]);
+  if (m.styles && m.styles.length) rows.push(['Style', m.styles.join(', ')]);
+  const rec = [m.release, m.label, m.format].filter(Boolean).join(' · ');
+  if (rec) rows.push(['Release', rec]);
+  return '<span class="disc-meta">' + rows.map(([k, val]) => '<span class="disc-row"><span class="disc-k">' + k + '</span>' + esc(val) + '</span>').join('') + '</span>';
+}
 function applyDisc(v) {
-  const d = disc[v.id];
-  if (d && d.length) {
-    d.forEach(t => v.tags.add(t));
-    v.dg = d.join(', ');
+  const m = normDiscEntry(disc[v.id]);
+  if (m && discHasMatch(m)) {
+    (m.genres || []).forEach(t => v.tags.add(t));
+    (m.styles || []).forEach(t => v.tags.add(t));
+    v.dmeta = m;
+    v.dg = formatDiscogsSummary(m);
   } else {
+    v.dmeta = null;
     v.dg = '';
   }
   v.hay = hayOf(v);
@@ -565,6 +610,8 @@ async function load() {
   if (!inputs.length) return;
   if (!key) { $('#keyDialog').showModal(); return }
   store.set('ycp_last', $('#channelInput').value);
+  const submitBtn = $('#loadForm button[type=submit]');
+  submitBtn.disabled = true;
   try {
     const all = [];
     for (const inp of inputs) all.push(...await fetchChannel(inp, $('#fresh').checked));
@@ -578,12 +625,13 @@ async function load() {
     setStatus(channelName + ': ' + videos.length + ' videos in the pool.');
     apply();
   } catch (e) { setStatus(refererHelp(e.message), true) }
+  finally { submitBtn.disabled = false }
 }
 function buildDiscChips() {
   const c = new Map();
   videos.forEach(v => {
-    const d = disc[v.id];
-    if (d && d.length) d.forEach(t => c.set(t, (c.get(t) || 0) + 1));
+    const m = normDiscEntry(disc[v.id]);
+    if (m) [...(m.genres || []), ...(m.styles || [])].forEach(t => c.set(t, (c.get(t) || 0) + 1));
   });
   const top = [...c].sort((a, b) => b[1] - a[1]).slice(0, 24);
   $('#discTagBox').hidden = !top.length;
@@ -654,7 +702,11 @@ function syncLimitChips() {
   });
 }
 function setLimitChip(btn) {
-  document.querySelectorAll('#limitChips .chip').forEach(c => c.classList.toggle('on', c === btn));
+  document.querySelectorAll('#limitChips .chip').forEach(c => {
+    const on = c === btn;
+    c.classList.toggle('on', on);
+    c.setAttribute('aria-pressed', on ? 'true' : 'false');
+  });
   $('#limit').value = btn.dataset.n;
 }
 function setDurChip(btn) {
@@ -669,7 +721,9 @@ function setDurChip(btn) {
 /* ---------- list ---------- */
 function render() {
   const total = queue.reduce((s, v) => s + v.dur, 0);
-  $('#count').textContent = queue.length ? queue.length + ' of ' + videos.length + ' videos, ' + fmtTotal(total) + ' of listening' : (videos.length ? 'No videos match these filters.' : 'No playlist yet.');
+  const countEl = $('#count');
+  countEl.textContent = queue.length ? queue.length + ' of ' + videos.length + ' videos, ' + fmtTotal(total) + ' of listening' : (videos.length ? 'No videos match these filters.' : 'No playlist yet.');
+  countEl.setAttribute('aria-live', 'polite');
   const multi = new Set(videos.map(v => v.ch)).size > 1;
   $('#unhide').textContent = 'Unhide all (' + hid.size + ')';
   $('#emptyState').hidden = !!videos.length;
@@ -678,11 +732,15 @@ function render() {
     const on = v.id === curId, heard = seen.has(v.id);
     return '<li class="' + (on ? 'on-row' : '') + (heard ? ' heard-row' : '') + '"><button type="button" class="it' + (on ? ' on' : '') + (heard ? ' heard' : '') + '" data-i="' + i + '">' +
     '<span class="thumb-wrap"><img loading="lazy" src="' + esc(v.thumb) + '" alt=""><span class="dur-badge">' + fmtDur(v.dur) + '</span></span>' +
-    '<span class="it-body"><b>' + esc(v.title) + '</b><span class="m">' + metaLine(v) + '</span>' + (v.dg ? '<span class="dg">Discogs: ' + esc(v.dg) + '</span>' : '') + '</span></button>' +
+    '<span class="it-body"><b>' + esc(v.title) + '</b><span class="m">' + metaLine(v) + '</span>' + discogsRowHtml(v.dmeta) + '</span></button>' +
     '<span class="act"><button type="button" data-fav="' + v.id + '" aria-label="' + (fav.has(v.id) ? 'Remove from favorites' : 'Add to favorites') + '">' + (fav.has(v.id) ? '\u2605' : '\u2606') + '</button><button type="button" data-hide="' + v.id + '" aria-label="Hide this video">Hide</button></span></li>';
   }).join('');
   $('#more').hidden = queue.length <= shown;
   $('#more').textContent = 'Show more (' + (queue.length - shown) + ' left)';
+  const note = $('#discBatchNote');
+  if (note) note.textContent = queue.length
+    ? 'Current list: ' + queue.length + ' video' + (queue.length === 1 ? '' : 's') + ' (Discogs uses this list only)'
+    : 'Current list: 0 videos. Build a playlist first.';
 }
 
 /* ---------- player ---------- */
@@ -715,7 +773,9 @@ function play(i) {
   $('#perr').style.display = 'none';
   player.loadVideoById(v.id);
   $('#now').textContent = v.title;
-  $('#nowMeta').textContent = v.ch + '  |  ' + new Date(v.published).toLocaleDateString() + '  |  ' + fmtDur(v.dur) + '  |  ' + compact.format(v.views) + ' views' + (v.dg ? '  |  Discogs: ' + v.dg : '');
+  let dm = v.dmeta && discHasMatch(v.dmeta) ? '  |  Discogs: ' + formatDiscogsSummary(v.dmeta) : '';
+  if (v.dmeta && v.dmeta.release) dm += ' (' + v.dmeta.release + ')';
+  $('#nowMeta').textContent = v.ch + '  |  ' + new Date(v.published).toLocaleDateString() + '  |  ' + fmtDur(v.dur) + '  |  ' + compact.format(v.views) + ' views' + dm;
   document.querySelectorAll('#list li').forEach(li => {
     const b = li.querySelector('.it');
     const on = b && +b.dataset.i === i;
@@ -786,45 +846,61 @@ async function discogsSearch(artist, track) {
   }
   return hit;
 }
-async function discogsGenres(hit) {
-  let res = [...(hit.genre || []), ...(hit.style || [])].map(x => String(x).toLowerCase());
-  if (!res.length && hit.id) {
-    const kind = hit.type === 'master' ? 'masters' : 'releases';
-    const j = await discogsApi(kind + '/' + hit.id);
-    if (j && !j.rate) res = [...(j.genres || []), ...(j.styles || [])].map(x => String(x).toLowerCase());
-    await wait(1100);
-  }
-  return res;
+async function discogsFetchMeta(hit) {
+  if (!hit.id) return null;
+  const kind = hit.type === 'master' ? 'masters' : 'releases';
+  const j = await discogsApi(kind + '/' + hit.id);
+  if (!j || j.rate) return j;
+  await wait(1100);
+  const year = String(j.released || j.year || hit.year || '').replace(/\D/g, '').slice(0, 4);
+  const labelRow = (j.labels && j.labels[0]) ? j.labels[0] : null;
+  const label = labelRow ? (labelRow.name + (labelRow.catno ? ' (' + labelRow.catno + ')' : '')) : '';
+  const fmt = (j.formats && j.formats[0]) ? [j.formats[0].name, ...(j.formats[0].descriptions || [])].filter(Boolean).join(', ') : '';
+  return {
+    release: j.title || hit.title || '',
+    year,
+    genres: (j.genres || hit.genre || []).map(x => String(x).toLowerCase()),
+    styles: (j.styles || hit.style || []).map(x => String(x).toLowerCase()),
+    label: label.trim(),
+    format: fmt
+  };
 }
 async function enrich() {
-  if (enriching) { enriching = false; return }
+  if (enriching) { enriching = false; $('#enrich').textContent = 'Add genre data (Discogs)'; $('#enrich').removeAttribute('aria-busy'); return }
   if (!dTok) { setStatus('Add your Discogs token in Setup first.', true); return }
-  enriching = true; $('#enrich').textContent = 'Stop genre lookup';
-  /* Re-try videos with no genres (older runs stored empty arrays and never retried). */
-  const todo = queue.filter(v => !disc[v.id] || !disc[v.id].length); let n = 0, matched = 0;
+  enriching = true;
+  $('#enrich').textContent = 'Stop genre lookup';
+  $('#enrich').setAttribute('aria-busy', 'true');
+  const todo = queue.filter(v => discNeedsLookup(v.id)); let n = 0, matched = 0;
   for (const v of todo) {
     if (!enriching) break;
     const parsed = splitAT(v.title);
-    let res = [];
+    let meta = null;
     if (parsed) {
       try {
         const hit = await discogsSearch(parsed.artist, parsed.track);
         if (hit && hit.rate) { setStatus('Discogs rate limit, waiting 30 seconds...'); await wait(30000); continue }
-        if (hit) res = await discogsGenres(hit);
+        if (hit) {
+          meta = await discogsFetchMeta(hit);
+          if (meta && meta.rate) { setStatus('Discogs rate limit, waiting 30 seconds...'); await wait(30000); continue }
+        }
       } catch (e) { setStatus('Discogs request failed (' + e.message + '). Check the token, or the browser may be blocking the request.', true); break }
     }
-    disc[v.id] = res; applyDisc(v);
-    if (res.length) matched++;
+    disc[v.id] = meta && discHasMatch(meta) ? meta : [];
+    applyDisc(v);
+    if (discHasMatch(meta)) matched++;
     n++;
-    setStatus('Genre lookup: ' + n + ' of ' + todo.length + ', ' + matched + ' matched (about 1 per second)');
+    setStatus('Discogs lookup: ' + n + ' of ' + todo.length + ', ' + matched + ' matched (about 1 per second)');
     if (n % 10 === 0) { db.set('discogs', disc); buildDiscChips(); buildTagChips(); render() }
     await wait(1100);
   }
-  enriching = false; $('#enrich').textContent = 'Add genre data (Discogs)';
+  enriching = false;
+  $('#enrich').textContent = 'Add genre data (Discogs)';
+  $('#enrich').removeAttribute('aria-busy');
   await db.set('discogs', disc); buildDiscChips(); buildTagChips(); apply();
   setStatus(matched
-    ? 'Genre lookup complete. ' + matched + ' of ' + todo.length + ' videos got Discogs genres. Check Discogs chips in the sidebar and lines under titles.'
-    : 'Genre lookup complete. No matches. Titles need Artist - Track format, and Discogs needs a release for that pair.');
+    ? 'Discogs lookup complete. ' + matched + ' of ' + todo.length + ' matched. See year, genre, style, and release under each title.'
+    : 'Discogs lookup complete. No matches. Titles need Artist - Track format, and Discogs needs a release for that pair.');
 }
 
 /* ---------- save to YouTube account ---------- */
